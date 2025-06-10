@@ -64,7 +64,7 @@ def encrypt_csv():
         return
 
     try:
-        with open(file_path, newline='', encoding='utf-8') as infile, open(save_path, mode='w', newline='', encoding='utf-8') as outfile:
+        with open(file_path, newline='', encoding='windows-1252') as infile, open(save_path, mode='w', newline='', encoding='utf-8') as outfile:
             reader = csv.reader(infile)
             writer = csv.writer(outfile)
             header = next(reader)
@@ -91,7 +91,7 @@ def decrypt_csv():
         return
 
     try:
-        with open(file_path, newline='', encoding='utf-8') as infile, open(save_path, mode='w', newline='', encoding='utf-8') as outfile:
+        with open(file_path, newline='', encoding='windows-1252') as infile, open(save_path, mode='w', newline='', encoding='utf-8') as outfile:
             reader = csv.reader(infile)
             writer = csv.writer(outfile)
             header = next(reader)
