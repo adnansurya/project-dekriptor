@@ -5,6 +5,9 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 from Crypto.Util.Padding import pad, unpad
 import base64
+import chardet
+
+
 
 # Fungsi AES Encrypt
 def aes_encrypt(plain_text, key):
@@ -49,6 +52,12 @@ def decrypt_text():
     output_text.delete("1.0", tk.END)
     output_text.insert(tk.END, decrypted)
 
+def detect_encoding(file_path):
+    with open(file_path, 'rb') as f:
+        raw_data = f.read(10000)  # baca sebagian file
+        result = chardet.detect(raw_data)
+        return result['encoding']
+
 def encrypt_csv():
     key = entry_key.get()
     if not key:
@@ -64,7 +73,8 @@ def encrypt_csv():
         return
 
     try:
-        with open(file_path, newline='', encoding='windows-1252') as infile, open(save_path, mode='w', newline='', encoding='utf-8') as outfile:
+        encoding = detect_encoding(file_path)
+        with open(file_path, newline='', encoding=encoding) as infile, open(save_path, mode='w', newline='', encoding='utf-8') as outfile:
             reader = csv.reader(infile)
             writer = csv.writer(outfile)
             header = next(reader)
@@ -91,7 +101,8 @@ def decrypt_csv():
         return
 
     try:
-        with open(file_path, newline='', encoding='windows-1252') as infile, open(save_path, mode='w', newline='', encoding='utf-8') as outfile:
+        encoding = detect_encoding(file_path)
+        with open(file_path, newline='', encoding=encoding) as infile, open(save_path, mode='w', newline='', encoding='utf-8') as outfile:
             reader = csv.reader(infile)
             writer = csv.writer(outfile)
             header = next(reader)
@@ -102,6 +113,7 @@ def decrypt_csv():
         messagebox.showinfo("Sukses", "File berhasil didekripsi dan disimpan.")
     except Exception as e:
         messagebox.showerror("Error", f"Gagal mendekripsi file:\n{e}")
+
 
 # GUI Setup
 root = tk.Tk()
