@@ -6,6 +6,7 @@ import chardet
 from Crypto.Cipher import AES
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
+from datetime import datetime
 
 # AES helper functions
 def pad(s):
@@ -59,6 +60,7 @@ def encrypt_csv():
         return
 
     try:
+        start_time = datetime.now()
         encoding = detect_encoding(file_path)
         with open(file_path, newline='', encoding=encoding) as infile, \
              open(save_path, mode='w', newline='', encoding=encoding) as outfile:
@@ -69,7 +71,16 @@ def encrypt_csv():
             for row in reader:
                 encrypted_row = [aes_encrypt(cell, key) for cell in row]
                 writer.writerow(encrypted_row)
-        messagebox.showinfo("Sukses", "File berhasil dienkripsi dan disimpan.")
+        end_time = datetime.now()
+        duration = end_time - start_time
+
+        messagebox.showinfo(
+            "Sukses",
+            f"File berhasil dienkripsi dan disimpan.\n\n"
+            f"Waktu mulai: {start_time.strftime('%d %b %Y %H:%M:%S')}\n"
+            f"Waktu selesai: {end_time.strftime('%d %b %Y %H:%M:%S')}\n"
+            f"Durasi: {str(duration)}"
+        )
     except Exception as e:
         messagebox.showerror("Error", f"Gagal mengenkripsi file:\n{e}")
 
@@ -89,6 +100,7 @@ def decrypt_csv():
         return
 
     try:
+        start_time = datetime.now()
         encoding = detect_encoding(file_path)
         with open(file_path, newline='', encoding=encoding) as infile, \
              open(save_path, mode='w', newline='', encoding=encoding) as outfile:
@@ -99,7 +111,16 @@ def decrypt_csv():
             for row in reader:
                 decrypted_row = [aes_decrypt(cell, key) for cell in row]
                 writer.writerow(decrypted_row)
-        messagebox.showinfo("Sukses", "File berhasil didekripsi dan disimpan.")
+        end_time = datetime.now()
+        duration = end_time - start_time
+
+        messagebox.showinfo(
+            "Sukses",
+            f"File berhasil didekripsi dan disimpan.\n\n"
+            f"Waktu mulai: {start_time.strftime('%d %b %Y %H:%M:%S')}\n"
+            f"Waktu selesai: {end_time.strftime('%d %b %Y %H:%M:%S')}\n"
+            f"Durasi: {str(duration)}"
+        )
     except Exception as e:
         messagebox.showerror("Error", f"Gagal mendekripsi file:\n{e}")
 
