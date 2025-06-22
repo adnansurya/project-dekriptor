@@ -4,10 +4,35 @@ import csv
 import base64
 import chardet
 import os
+import json
 from Crypto.Cipher import AES
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 from datetime import datetime
+
+LOG_JSON = "log.json"
+
+def write_log_json(proses, file_asal, file_tujuan, status, durasi="", error=""):
+    log_entry = {
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "proses": proses,
+        "file_asal": file_asal,
+        "file_tujuan": file_tujuan,
+        "status": status,
+        "durasi": str(durasi),
+        "error": error
+    }
+    logs = []
+    if os.path.exists(LOG_JSON):
+        with open(LOG_JSON, "r", encoding="utf-8") as f:
+            try:
+                logs = json.load(f)
+            except:
+                logs = []
+    logs.append(log_entry)
+    with open(LOG_JSON, "w", encoding="utf-8") as f:
+        json.dump(logs, f, indent=2, ensure_ascii=False)
+
 
 
 LOG_FILE = "log.txt"
@@ -67,8 +92,8 @@ def encrypt_csv():
     save_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV Files", "*.csv")])
     if not save_path:
         return
-
-    write_log(f"Mulai proses ENKRIPSI untuk file: {file_path}")
+    
+    write_log_json("ENKRIPSI", file_path, save_path, "MULAI", 0)
     try:
         start_time = datetime.now()
         encoding = detect_encoding(file_path)
@@ -84,7 +109,7 @@ def encrypt_csv():
         end_time = datetime.now()
         duration = end_time - start_time
 
-        write_log(f"Berhasil ENKRIPSI: {file_path} -> {save_path} | Durasi: {duration}")
+        write_log_json("ENKRIPSI", file_path, save_path, "SUKSES", duration)
         messagebox.showinfo(
             "Sukses",
             f"File berhasil dienkripsi dan disimpan.\n\n"
@@ -93,7 +118,7 @@ def encrypt_csv():
             f"Durasi: {str(duration)}"
         )
     except Exception as e:
-        write_log(f"[ERROR] Gagal ENKRIPSI {file_path}: {e}")
+        write_log_json("ENKRIPSI", file_path, save_path, "GAGAL", error=str(e))
         messagebox.showerror("Error", f"Gagal mengenkripsi file:\n{e}")
 
 
@@ -112,7 +137,7 @@ def decrypt_csv():
     if not save_path:
         return
 
-    write_log(f"Mulai proses DEKRIPSI untuk file: {file_path}")
+    write_log_json("DEKRIPSI", file_path, save_path, "MULAI", 0)
     try:
         start_time = datetime.now()
         encoding = detect_encoding(file_path)
@@ -128,7 +153,7 @@ def decrypt_csv():
         end_time = datetime.now()
         duration = end_time - start_time
 
-        write_log(f"Berhasil DEKRIPSI: {file_path} -> {save_path} | Durasi: {duration}")
+        write_log_json("DEKRIPSI", file_path, save_path, "SUKSES", duration)
         messagebox.showinfo(
             "Sukses",
             f"File berhasil didekripsi dan disimpan.\n\n"
@@ -137,31 +162,68 @@ def decrypt_csv():
             f"Durasi: {str(duration)}"
         )
     except Exception as e:
-        write_log(f"[ERROR] Gagal DEKRIPSI {file_path}: {e}")
+        write_log_json("DEKRIPSI", file_path, save_path, "GAGAL", error=str(e))
         messagebox.showerror("Error", f"Gagal mendekripsi file:\n{e}")
 
 
 def show_log_history():
-    if not os.path.exists(LOG_FILE):
+    if not os.path.exists(LOG_JSON):
         messagebox.showinfo("Riwayat", "Belum ada riwayat proses.")
         return
 
-    with open(LOG_FILE, "r", encoding="utf-8") as f:
-        log_content = f.read()
-
+    # Buka window log
     log_window = tk.Toplevel(root)
     log_window.title("Riwayat Proses")
-    log_window.geometry("600x400")
+    log_window.geometry("700x500")
 
+    # Kolom Pencarian
+    search_var = tk.StringVar()
+    date_var = tk.StringVar()
+
+    def refresh_log_display():
+        text_widget.config(state="normal")
+        text_widget.delete("1.0", tk.END)
+        keyword = search_var.get().lower()
+        date_filter = date_var.get().strip()
+        try:
+            with open(LOG_JSON, "r", encoding="utf-8") as f:
+                logs = json.load(f)
+            for entry in logs:
+                match_keyword = keyword in json.dumps(entry).lower()
+                match_date = date_filter in entry["timestamp"] if date_filter else True
+                if match_keyword and match_date:
+                    text_widget.insert(tk.END, "-"*60 + "\n")
+                    for k, v in entry.items():
+                        text_widget.insert(tk.END, f"{k.title()}: {v}\n")
+        except Exception as e:
+            text_widget.insert(tk.END, f"Gagal membaca log: {e}")
+        text_widget.config(state="disabled")
+
+    def clear_logs():
+        if messagebox.askyesno("Konfirmasi", "Yakin ingin menghapus semua riwayat?"):
+            with open(LOG_JSON, "w", encoding="utf-8") as f:
+                json.dump([], f)
+            refresh_log_display()
+
+    # Search
+    tk.Label(log_window, text="Cari:").pack(anchor="w", padx=10)
+    tk.Entry(log_window, textvariable=search_var).pack(fill="x", padx=10)
+    tk.Label(log_window, text="Filter Tanggal (YYYY-MM-DD):").pack(anchor="w", padx=10, pady=(5,0))
+    tk.Entry(log_window, textvariable=date_var).pack(fill="x", padx=10)
+
+    # Tombol refresh dan hapus
+    btn_frame = tk.Frame(log_window)
+    btn_frame.pack(pady=5)
+    tk.Button(btn_frame, text="🔄 Refresh", command=refresh_log_display).pack(side="left", padx=5)
+    tk.Button(btn_frame, text="🗑 Hapus Riwayat", command=clear_logs).pack(side="left", padx=5)
+
+    # Text box log
     text_widget = tk.Text(log_window, wrap="word")
-    text_widget.insert("1.0", log_content)
+    text_widget.pack(expand=True, fill="both", padx=10, pady=5)
     text_widget.config(state="disabled")
-    text_widget.pack(expand=True, fill="both")
 
-    scrollbar = tk.Scrollbar(text_widget)
-    scrollbar.pack(side="right", fill="y")
-    text_widget.config(yscrollcommand=scrollbar.set)
-    scrollbar.config(command=text_widget.yview)
+    refresh_log_display()
+
 
 # GUI
 root = tk.Tk()
