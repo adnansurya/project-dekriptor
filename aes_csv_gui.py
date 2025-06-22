@@ -3,10 +3,19 @@ from tkinter import filedialog, messagebox
 import csv
 import base64
 import chardet
+import os
 from Crypto.Cipher import AES
 from Crypto.Protocol.KDF import PBKDF2
 from Crypto.Random import get_random_bytes
 from datetime import datetime
+
+
+LOG_FILE = "log.txt"
+
+def write_log(message):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(f"[{timestamp}] {message}\n")
 
 # AES helper functions
 def pad(s):
@@ -59,6 +68,7 @@ def encrypt_csv():
     if not save_path:
         return
 
+    write_log(f"Mulai proses ENKRIPSI untuk file: {file_path}")
     try:
         start_time = datetime.now()
         encoding = detect_encoding(file_path)
@@ -74,6 +84,7 @@ def encrypt_csv():
         end_time = datetime.now()
         duration = end_time - start_time
 
+        write_log(f"Berhasil ENKRIPSI: {file_path} -> {save_path} | Durasi: {duration}")
         messagebox.showinfo(
             "Sukses",
             f"File berhasil dienkripsi dan disimpan.\n\n"
@@ -82,7 +93,9 @@ def encrypt_csv():
             f"Durasi: {str(duration)}"
         )
     except Exception as e:
+        write_log(f"[ERROR] Gagal ENKRIPSI {file_path}: {e}")
         messagebox.showerror("Error", f"Gagal mengenkripsi file:\n{e}")
+
 
 # Decrypt CSV File
 def decrypt_csv():
@@ -99,6 +112,7 @@ def decrypt_csv():
     if not save_path:
         return
 
+    write_log(f"Mulai proses DEKRIPSI untuk file: {file_path}")
     try:
         start_time = datetime.now()
         encoding = detect_encoding(file_path)
@@ -114,6 +128,7 @@ def decrypt_csv():
         end_time = datetime.now()
         duration = end_time - start_time
 
+        write_log(f"Berhasil DEKRIPSI: {file_path} -> {save_path} | Durasi: {duration}")
         messagebox.showinfo(
             "Sukses",
             f"File berhasil didekripsi dan disimpan.\n\n"
@@ -122,7 +137,31 @@ def decrypt_csv():
             f"Durasi: {str(duration)}"
         )
     except Exception as e:
+        write_log(f"[ERROR] Gagal DEKRIPSI {file_path}: {e}")
         messagebox.showerror("Error", f"Gagal mendekripsi file:\n{e}")
+
+
+def show_log_history():
+    if not os.path.exists(LOG_FILE):
+        messagebox.showinfo("Riwayat", "Belum ada riwayat proses.")
+        return
+
+    with open(LOG_FILE, "r", encoding="utf-8") as f:
+        log_content = f.read()
+
+    log_window = tk.Toplevel(root)
+    log_window.title("Riwayat Proses")
+    log_window.geometry("600x400")
+
+    text_widget = tk.Text(log_window, wrap="word")
+    text_widget.insert("1.0", log_content)
+    text_widget.config(state="disabled")
+    text_widget.pack(expand=True, fill="both")
+
+    scrollbar = tk.Scrollbar(text_widget)
+    scrollbar.pack(side="right", fill="y")
+    text_widget.config(yscrollcommand=scrollbar.set)
+    scrollbar.config(command=text_widget.yview)
 
 # GUI
 root = tk.Tk()
@@ -136,5 +175,6 @@ entry_key.pack()
 
 tk.Button(root, text="Enkripsi File CSV", command=encrypt_csv, width=30, bg="lightblue").pack(pady=10)
 tk.Button(root, text="Dekripsi File CSV", command=decrypt_csv, width=30, bg="lightgreen").pack(pady=5)
+tk.Button(root, text="Lihat Riwayat Proses", command=show_log_history, width=30, bg="lightyellow").pack(pady=5)
 
 root.mainloop()
