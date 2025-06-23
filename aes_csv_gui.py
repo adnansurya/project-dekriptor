@@ -12,7 +12,20 @@ from datetime import datetime
 
 LOG_JSON = "log.json"
 
-def write_log_json(proses, file_asal, file_tujuan, status, durasi="", error=""):
+def get_file_size(path):
+    try:
+        size_bytes = os.path.getsize(path)
+        if size_bytes < 1024:
+            return f"{size_bytes} B"
+        elif size_bytes < 1024**2:
+            return f"{size_bytes / 1024:.2f} KB"
+        else:
+            return f"{size_bytes / (1024**2):.2f} MB"
+    except:
+        return "-"
+
+
+def write_log_json(proses, file_asal, file_tujuan, status, durasi="", error="", ukuran_asal="", ukuran_hasil=""):
     log_entry = {
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "proses": proses,
@@ -20,7 +33,9 @@ def write_log_json(proses, file_asal, file_tujuan, status, durasi="", error=""):
         "file_tujuan": file_tujuan,
         "status": status,
         "durasi": str(durasi),
-        "error": error
+        "error": error,
+        "ukuran_asal": ukuran_asal,
+        "ukuran_hasil": ukuran_hasil
     }
     logs = []
     if os.path.exists(LOG_JSON):
@@ -32,6 +47,7 @@ def write_log_json(proses, file_asal, file_tujuan, status, durasi="", error=""):
     logs.append(log_entry)
     with open(LOG_JSON, "w", encoding="utf-8") as f:
         json.dump(logs, f, indent=2, ensure_ascii=False)
+
 
 
 
@@ -92,7 +108,7 @@ def encrypt_csv():
     save_path = filedialog.asksaveasfilename(defaultextension=".csv", filetypes=[("CSV Files", "*.csv")])
     if not save_path:
         return
-    
+
     write_log_json("ENKRIPSI", file_path, save_path, "MULAI", 0)
     try:
         start_time = datetime.now()
@@ -109,7 +125,10 @@ def encrypt_csv():
         end_time = datetime.now()
         duration = end_time - start_time
 
-        write_log_json("ENKRIPSI", file_path, save_path, "SUKSES", duration)
+        ukuran_asal = get_file_size(file_path)
+        ukuran_hasil = get_file_size(save_path)
+        write_log_json("ENKRIPSI", file_path, save_path, "SUKSES", duration, ukuran_asal=ukuran_asal, ukuran_hasil=ukuran_hasil)
+
         messagebox.showinfo(
             "Sukses",
             f"File berhasil dienkripsi dan disimpan.\n\n"
@@ -153,7 +172,10 @@ def decrypt_csv():
         end_time = datetime.now()
         duration = end_time - start_time
 
-        write_log_json("DEKRIPSI", file_path, save_path, "SUKSES", duration)
+        ukuran_asal = get_file_size(file_path)
+        ukuran_hasil = get_file_size(save_path)
+        write_log_json("DEKRIPSI", file_path, save_path, "SUKSES", duration, ukuran_asal=ukuran_asal, ukuran_hasil=ukuran_hasil)
+
         messagebox.showinfo(
             "Sukses",
             f"File berhasil didekripsi dan disimpan.\n\n"
@@ -194,7 +216,8 @@ def show_log_history():
                 if match_keyword and match_date:
                     text_widget.insert(tk.END, "-"*60 + "\n")
                     for k, v in entry.items():
-                        text_widget.insert(tk.END, f"{k.title()}: {v}\n")
+                        label = k.replace("_", " ").title()
+                        text_widget.insert(tk.END, f"{label}: {v}\n")
         except Exception as e:
             text_widget.insert(tk.END, f"Gagal membaca log: {e}")
         text_widget.config(state="disabled")
