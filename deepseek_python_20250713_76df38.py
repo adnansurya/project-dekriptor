@@ -381,7 +381,7 @@ monitor_frame = tk.Frame(root)
 monitor_frame.pack(pady=10)
 
 def update_stat_labels():
-    cpu = psutil.cpu_percent(interval=1)
+    cpu = psutil.cpu_percent(interval=0.5)
     ram = psutil.virtual_memory()
     cpu_freq = psutil.cpu_freq().current if psutil.cpu_freq() else None
     
