@@ -330,10 +330,10 @@ def show_log_history():
     search_frame = tk.Frame(log_window)
     search_frame.pack(pady=10, padx=10, fill="x")
     
-    tk.Label(search_frame, text="Cari:").pack(side="left")
-    tk.Entry(search_frame, textvariable=search_var, width=30).pack(side="left", padx=5)
-    tk.Label(search_frame, text="Filter Tanggal (YYYY-MM-DD):").pack(side="left", padx=5)
-    tk.Entry(search_frame, textvariable=date_var, width=15).pack(side="left", padx=5)
+    tk.Label(log_window, text="Cari:").pack(anchor="w", padx=10)
+    tk.Entry(log_window, textvariable=search_var).pack(fill="x", padx=10)
+    tk.Label(log_window, text="Filter Tanggal (YYYY-MM-DD):").pack(anchor="w", padx=10, pady=(5, 0))
+    tk.Entry(log_window, textvariable=date_var).pack(fill="x", padx=10)
     
     # Button frame
     btn_frame = tk.Frame(log_window)
@@ -372,9 +372,9 @@ entry_key.pack()
 btn_frame = tk.Frame(root)
 btn_frame.pack(pady=15)
 
-tk.Button(btn_frame, text="Enkripsi File CSV", command=encrypt_csv, width=20, bg="lightblue").pack(pady=5)
-tk.Button(btn_frame, text="Dekripsi File CSV", command=decrypt_csv, width=20, bg="lightgreen").pack(pady=5)
-tk.Button(btn_frame, text="Lihat Riwayat", command=show_log_history, width=20, bg="lightyellow").pack(pady=5)
+tk.Button(btn_frame, text="Enkripsi File CSV", command=encrypt_csv, width=30, bg="lightblue").pack(pady=5)
+tk.Button(btn_frame, text="Dekripsi File CSV", command=decrypt_csv, width=30, bg="lightgreen").pack(pady=5)
+tk.Button(btn_frame, text="Lihat Riwayat Proses", command=show_log_history, width=30, bg="lightyellow").pack(pady=5)
 
 # System monitor
 monitor_frame = tk.Frame(root)
